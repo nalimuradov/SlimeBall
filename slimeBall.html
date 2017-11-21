@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8" />
+	<title>Slime Ball</title>
+	<style>
+		* { padding: 0; margin: 0; }
+		canvas { background-image: url("https://twistedsifter.files.wordpress.com/2013/05/animated-gifs-of-fighting-game-backgrounds-25.gif?w=800&h=336"); 
+				 background-size: cover;
+				 display: block; 
+				 margin: 0 auto; 
+				 border:1px solid black}
+	</style>
+</head>
+<body>
+
+<canvas id="canvas" width="1000" height="600"></canvas>
+
+<script>
+	// JS goes here
+	
+	//reference to the canvas
+	var canvasJS = document.getElementById("canvas");
+	
+	//context allows us to paint to canvas
+	var context = canvasJS.getContext("2d");
+	
+	// position of the ball
+	var x = canvas.width/4 - 50;
+	var y = canvas.height - 300;
+	
+	var dx = 0;
+	var dy = 0;
+	var gravity = 0.12;
+		
+	// collision detection
+	var ballRadius = 20;
+	
+	var playerSpeed = 3.5;
+	var player1Color = 'maroon';
+	var p1ColorCounter = 0;
+	var player2Color = 'goldenrod';
+	var p2ColorCounter = 0;
+	
+	// player controllers
+	var player1X = 200;
+	var player1Y = 600;
+	var player1Rad = 60;
+	
+	var rightPressed1 = false;
+	var leftPressed1 = false;
+	var jumpPressed1 = false;
+	
+	var player2X = 800;
+	var player2Y = 600;
+	var player2Rad = 60;
+	
+	var player1DY = 0;
+	var player2DY = 0;
+	
+	var eyeRad = 10;
+	
+	var rightPressed2 = false;
+	var leftPressed2 = false;
+	var jumpPressed2 = false;
+	
+	//score
+	var score1 = 0;
+	var score2 = 0;
+	
+	//new game or not
+	var newGame = false;
+	
+	var twoPlayer = false;
+	
+	//background links
+	var jungleBG = "https://twistedsifter.files.wordpress.com/2013/05/animated-gifs-of-fighting-game-backgrounds-25.gif?w=800&h=336";
+	var waterfallBG = "https://data.photofunky.net/output/image/0/f/b/1/0fb1d7/photofunky.gif";
+	var cityBG = "https://i.imgur.com/LEEQr.gif";
+	var templeBG = "http://kookyjar.com/wp-content/uploads/2013/04/zen-temple-in-fall.gif";
+	
+	// listeners for keyboard presses to move players
+	document.addEventListener("keydown", keyDownHandler, false);
+	document.addEventListener("keyup", keyUpHandler, false);
+	
+	canvas.addEventListener("mousedown", getPosition, false);
+	
+	drawStartButton();
+		
+	function keyDownHandler(e) {
+		if(e.keyCode == 68) {
+			rightPressed1 = true;
+		}
+		else if(e.keyCode == 65) {
+			leftPressed1 = true;
+		}
+		
+		if(e.keyCode == 39) {
+			rightPressed2 = true;
+		}
+		else if(e.keyCode == 37) {
+			leftPressed2 = true;
+		}
+		
+		if(e.keyCode == 87){
+			jumpPressed1 = true;
+		}
+		
+		if(e.keyCode == 38){
+			jumpPressed2 = true;
+		}
+		
+		if(e.keyCode == 32){
+			newGame = true;
+		}
+		
+		if(e.keyCode == 83){
+			//player 1 down
+			
+			p1ColorCounter += 1;
+			
+			if(p1ColorCounter == 1){
+				player1Color = 'yellowgreen';
+			}
+			else if (p1ColorCounter == 2){
+				player1Color = 'rebeccapurple';
+			}
+			else if (p1ColorCounter == 3){
+				player1Color = 'cornflowerblue';
+			}
+			else if (p1ColorCounter == 4){
+				player1Color = 'maroon';
+				p1ColorCounter = 0;
+			}
+		}
+		
+		if(e.keyCode == 40){
+			// player 2 down
+			
+			p2ColorCounter += 1;
+			
+			if(p2ColorCounter == 1){
+				player2Color = 'darkcyan';
+			}
+			else if (p2ColorCounter == 2){
+				player2Color = 'tomato';
+			}
+			else if (p2ColorCounter == 3){
+				player2Color = 'darkblue';
+			}
+			else if (p2ColorCounter == 4){
+				player2Color = 'goldenrod';
+				p2ColorCounter = 0;
+			}
+		}
+	}
+	
+	function keyUpHandler(e) {
+		if(e.keyCode == 68) {
+			rightPressed1 = false;
+		}
+		else if(e.keyCode == 65) {
+			leftPressed1 = false;
+		}
+		
+		if(e.keyCode == 39) {
+			rightPressed2 = false;
+		}
+		else if(e.keyCode == 37) {
+			leftPressed2 = false;
+		}
+		
+		if(e.keyCode == 87){
+			jumpPressed1 = false;
+		}
+		
+		if(e.keyCode == 38){
+			jumpPressed2 = false;
+		}
+	}
+	
+	function getPosition(e){
+		var xClick = e.x;
+		var yClick = e.y;
+	
+		xClick -= canvas.offsetLeft;
+		yClick -= canvas.offsetTop;
+	
+		if(xClick > 100 && xClick < 450){
+			if(yClick > 100 && yClick < 500){
+				twoPlayer = false;
+				start();
+			}
+		}
+		
+		if(xClick > 550 && xClick < 900){
+			if(yClick > 100 && yClick < 500){
+				twoPlayer = true;
+				start();
+			}
+		}
+		
+	}
+	
+	
+	function drawBall(){		
+		context.beginPath();
+		context.arc(x, y, ballRadius, 0, 2*Math.PI, false);
+		context.closePath();
+		context.lineWidth = 7;
+		context.fillStyle = 'lightskyblue';
+		context.fill();
+		context.strokeStyle = 'black';
+		context.stroke();
+			
+	}
+	
+	function drawPlayer1(color){
+		context.beginPath();
+		context.arc(player1X, player1Y, player1Rad, Math.PI, 0, false);
+		context.closePath();
+		context.lineWidth = 1;
+		context.fillStyle = color;
+		context.fill();
+		context.strokeStyle = 'black';
+		context.stroke();
+		
+		context.beginPath();
+		context.arc(player1X + 40, player1Y - 25, eyeRad, 0, 2*Math.PI, false);
+		context.closePath();
+		context.lineWidth = 5;
+		context.fillStyle = 'white';
+		context.fill();
+		context.strokeStyle = 'black';
+		context.stroke();
+	}
+	
+	function drawPlayer2(color){
+		context.beginPath();
+		context.arc(player2X, player2Y, player2Rad, Math.PI, 0, false);
+		context.closePath();
+		context.lineWidth = 1;
+		context.fillStyle = color;
+		context.fill();
+		context.strokeStyle = 'black';
+		context.stroke();
+		
+		context.beginPath();
+		context.arc(player2X - 40, player2Y - 25, eyeRad, 0, 2*Math.PI, false);
+		context.closePath();
+		context.lineWidth = 5;
+		context.fillStyle = 'black';
+		context.fill();
+		context.strokeStyle = 'white';
+		context.stroke();
+	}
+	
+	function drawNet(){
+		context.beginPath();
+		context.rect(495, 520, 10, 80);
+		context.fillStyle = 'black';
+		context.fill();
+		context.lineWidth = 5;
+		context.strokeStyle = 'grey';
+		context.stroke();
+		
+	}
+	
+
+	function drawScore(){
+		context.font = "64px Arial";
+		context.fillText(score1 + " - " + score2, 432, 60);
+	}
+	
+	function drawWinner(winner){
+		context.font = "48px Arial";
+		context.fillText(winner + " Wins", 360, 120);
+		
+		dx = 0;
+		dy = 0;
+		x = 1200;
+		y = 100;
+		
+		context.font = "bold 24px Arial";
+		context.fillText("press space to play again", 360, 160);
+		
+		
+		
+		if (newGame == true){
+			document.location.reload();
+					
+		}
+		
+	}
+	
+	
+	function drawStartButton(){
+		context.beginPath();
+		context.rect(100, 100, 350, 400);
+		context.fillStyle = 'black';
+		context.fill();
+		context.lineWidth = 5;
+		context.strokeStyle = 'grey';
+		context.stroke();
+		
+		context.beginPath
+		context.font = "100px Arial";
+		context.fillStyle = 'white';
+		context.fillText("1P", 215, 320);
+		
+		context.beginPath();
+		context.rect(550, 100, 350, 400);
+		context.fillStyle = 'black';
+		context.fill();
+		context.lineWidth = 5;
+		context.strokeStyle = 'grey';
+		context.stroke();
+		
+		context.beginPath
+		context.font = "100px Arial";
+		context.fillStyle = 'white';
+		context.fillText("2P", 665, 320);
+		
+		
+		
+	}
+		
+	
+	function sleep(miliseconds) {
+		var currentTime = new Date().getTime();
+
+		while (currentTime + miliseconds >= new Date().getTime()) {
+		}
+	}
+	
+	function draw(){
+		context.clearRect(0, 0, canvas.width, canvas.height);
+			
+		drawBall();	
+		drawPlayer1(player1Color);
+		drawPlayer2(player2Color);
+		drawNet();
+		drawScore();
+		
+		// calculate how far the ball is from the players
+		var dist1X = x - player1X;
+		var dist1Y = y - player1Y;
+		var dist1 = Math.sqrt(Math.pow(Math.abs(dist1X), 2) + Math.pow(Math.abs(dist1Y), 2)); 
+		
+		var dist2X = x - player2X;
+		var dist2Y = y - player2Y;
+		var dist2 = Math.sqrt(Math.pow(Math.abs(dist2X), 2) + Math.pow(Math.abs(dist2Y), 2));
+		
+		dy += gravity;
+		y += dy;
+		x += dx;
+		
+		/////////////////////////////////////////////////////
+		if (dist1 <= ballRadius + player1Rad) {
+			dy = -8;
+			dx = dist1X/10;
+		}
+		else if (dist2 <= ballRadius + player2Rad) {
+			dy = -8;
+			dx = dist2X/10;
+		}
+		else if (x < canvas.width/2 && y > canvas.height){
+			score2 += 1;
+			sleep(300);
+			dx = 0;
+			x = 800;
+			y = canvas.height/2;
+			
+			player1X = 200;
+			player1Y = 600;
+			player2X = 800;	
+			player2Y = 600;
+		}
+		else if (x > canvas.width/2 && y > canvas.height){
+			score1 += 1;
+			sleep(300);
+			dx = 0; 
+			x = 200;
+			y = canvas.height/2;
+			
+			player1X = 200;
+			player1Y = 600;
+			player2X = 800;
+			player2Y = 600;
+		}
+		
+		// collision with net
+		
+		if (x + ballRadius > 495 && x - ballRadius < 505){
+			if (y + ballRadius > 520 && y + ballRadius < 530){
+				dy = - dy;
+			}
+			else if (y + ballRadius > 530){
+				dx = - dx;
+			}
+		}
+		
+		
+		// determine the winner		
+		
+		if (score1 == 5){
+			//alert("Player 1 Wins");
+			//document.location.reload();
+			drawWinner("Player 1");
+			
+		}
+		
+		if (score2 == 5){
+			//alert("Player 2 Wins");
+			//document.location.reload();
+			drawWinner("Player 2");
+		}
+		
+			
+		if(x + dx > canvas.width-ballRadius || x + dx < ballRadius){
+			dx = -dx;
+		}
+		
+		//////////////////////////////////////////
+
+		
+		// when players press on keys perform what is below
+		
+		if (rightPressed1 && player1X < (canvas.width/2 - player1Rad)) {
+			player1X += playerSpeed;
+		}
+		else if(leftPressed1 && player1X > player1Rad) {
+			player1X -= playerSpeed;
+		}
+		
+		// controls for player 2 (depends on if 1p or 2p
+		
+		if (twoPlayer == true){
+			if (rightPressed2 && player2X < (canvas.width - player2Rad)) {
+				player2X += playerSpeed;
+			}
+			else if(leftPressed2 && player2X > player2Rad + canvas.width/2) {
+				player2X -= playerSpeed;
+			}
+		}
+		
+		if (twoPlayer == false){
+			if (x + 30 > player2X && player2X < (canvas.width - player2Rad)) {
+				player2X += playerSpeed + 1.5;
+			}
+			else if(x + 30 < player2X && player2X > player2Rad + canvas.width/2) {
+				player2X -= playerSpeed + 1.5;
+			}
+		}
+		
+		
+
+		// jumping mechanics
+		
+		if (jumpPressed1 && player1Y > 595){
+			player1Y -= 1; 	
+			player1DY = -6;
+		}	
+		
+		if (player1Y < canvas.height){
+			player1DY += gravity;
+			player1Y += player1DY;
+		}
+		
+		if (twoPlayer == true){
+			if (jumpPressed2 && player2Y > 595){
+				player2Y -= 1; 	
+				player2DY = -6;
+			}	
+			
+			if (player2Y < canvas.height){
+				player2DY += gravity;
+				player2Y += player2DY;
+			}	
+		
+			
+		}	
+		
+		if (twoPlayer == false){
+			
+			if(player2Y > 595 && y < 300){
+				player2Y -= 1;
+				player2DY = -6;
+			}
+			
+			if (player2Y < canvas.height){
+				player2DY += gravity;
+				player2Y += player2DY;
+			}	
+		
+		}
+	}
+	
+	// calls the menu, when start is clicked starts the intervals
+	function start(){
+		setInterval(draw, 5);
+	}
+	
+</script>
+
+</body>
+</html>
