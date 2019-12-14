@@ -32,7 +32,7 @@
 	
 	var dx = 0;
 	var dy = 0;
-	var gravity = 0.12;
+	var gravity = 0.11; //0.12
 		
 	// collision detection
 	var ballRadius = 20;
@@ -483,10 +483,11 @@
 		}	
 		
 		if (twoPlayer == false){
-			
 			if(player2Y > 595 && y < 300){
-				player2Y -= 1;
-				player2DY = -6;
+				if(Math.random() > 0.95){
+					player2Y -= 1;
+					player2DY = -6;
+				}
 			}
 			
 			if (player2Y < canvas.height){
