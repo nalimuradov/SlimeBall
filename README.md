@@ -1,4 +1,4 @@
-# SlimeBall
+# Slime Ball
 
 Player 1: WASD Keys
 
